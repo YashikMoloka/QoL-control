@@ -20,19 +20,19 @@ function togglePanel(team) {
 		delete panels[team.id];
 		notify(
 			'[lightgray]Core info [#' +
-				team.color.toString() +
-				']' +
-				team.name +
-				' [scarlet]OFF'
+			team.color.toString() +
+			']' +
+			team.name +
+			' [scarlet]OFF'
 		);
 	} else {
 		createPanel(team);
 		notify(
 			'[lightgray]Core info [#' +
-				team.color.toString() +
-				']' +
-				team.name +
-				' [green]ON'
+			team.color.toString() +
+			']' +
+			team.name +
+			' [green]ON'
 		);
 	}
 }
@@ -43,6 +43,7 @@ function createPanel(team) {
 	let table = new Table(Styles.black5);
 	table.margin(0);
 	table.touchable = Packages.arc.scene.event.Touchable.enabled;
+	table.setWidth(200);
 
 	let label = new Label('');
 	label.setWrap(true);
@@ -185,9 +186,9 @@ Events.run(Trigger.update, () => {
 			0,
 			Core.scene.getHeight() - p.table.getHeight()
 		);
-		p.table.setPosition(p.btnX, p.btnY);
 
-		if (doUpdate) {
+		let isDragging = p.dragHandler.state.isDragging;
+		if (doUpdate && isDragging == false) {
 			let teamData = Vars.state.teams.get(p.team);
 			let core = teamData ? teamData.core() : null;
 
@@ -214,10 +215,18 @@ Events.run(Trigger.update, () => {
 			}
 
 			if (p.lastText !== text) {
+				var topY = p.table.getY(2);
+
 				p.label.setText(text);
 				p.lastText = text;
+
+				p.table.invalidate();
 				p.table.pack();
+				p.table.validate();
+
+				p.btnY = topY - p.table.getHeight();
 			}
 		}
+		p.table.setPosition(p.btnX, p.btnY);
 	}
 });
