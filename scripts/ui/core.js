@@ -9,8 +9,8 @@ let timer = 0;
 const formatNum = (n) => {
 	let num = Number(n);
 	let abs = Math.abs(num);
-	if (abs >= 1000000) return Math.round(num / 100000) / 10 + 'm';
-	if (abs >= 1000) return Math.round(num / 100) / 10 + 'k';
+	if (abs >= 1000000) return Math.floor(num / 100000) / 10 + 'm';
+	if (abs >= 1000) return Math.floor(num / 100) / 10 + 'k';
 	return Math.floor(num).toString();
 };
 
@@ -43,13 +43,29 @@ function createPanel(team) {
 	let table = new Table(Styles.black5);
 	table.margin(0);
 	table.touchable = Packages.arc.scene.event.Touchable.enabled;
-	table.setWidth(200);
+	table.setWidth(240);
+
+	let items = [];
+	let cells = [];
 
 	let label = new Label('');
 	label.setWrap(true);
 	label.setAlignment(Packages.arc.util.Align.topLeft);
 	label.setFontScale(0.9);
-	table.add(label).width(200);
+	table.row();
+	table.add(label);
+	for (var i = 0; i < 4; i++) {
+		table.row();
+		for (let j = 0; j < 4; j++) {
+			let itemLabel = new Label('');
+			itemLabel.setAlignment(Packages.arc.util.Align.topLeft);
+			itemLabel.setFontScale(0.9);
+
+			table.add(itemLabel).width(60).minSize(60, 0);
+			items.push(itemLabel);
+		}
+	}
+	table.row();
 	table.pack();
 
 	Vars.ui.hudGroup.addChild(table);
@@ -64,6 +80,7 @@ function createPanel(team) {
 	let pData = {
 		table: table,
 		label: label,
+		items: items,
 		team: team,
 		lastText: '',
 		btnX: sx,
@@ -197,35 +214,40 @@ Events.run(Trigger.update, () => {
 				p.team.color.toString() +
 				']' +
 				p.team.name +
-				' Core[white]\n';
+				' Core[white]';
 
+			let idx = 0;
 			if (core && core.items != null) {
-				let itemStr = '';
 				Vars.content.items().each(
 					cons((item) => {
+						if (idx >= 16) return;
 						let amt = core.items.get(item);
-						if (amt > 0)
-							itemStr += item.emoji() + formatNum(amt) + ' ';
+						if (amt > 0) {
+							p.items[idx].setText(item.emoji() + formatNum(amt));
+							idx++;
+						}
 					})
 				);
-				if (itemStr !== '') text += itemStr;
-				else text += '[lightgray]Empty';
+				if (idx == 0)
+					text += '[lightgray]Empty';
 			} else {
 				text += '[scarlet]No Core';
 			}
 
-			if (p.lastText !== text) {
-				var topY = p.table.getY(2);
-
-				p.label.setText(text);
-				p.lastText = text;
-
-				p.table.invalidate();
-				p.table.pack();
-				p.table.validate();
-
-				p.btnY = topY - p.table.getHeight();
+			for (var i = idx; i < 16; i++) {
+				p.items[idx].setText('');
 			}
+
+			var topY = p.table.getY(2);
+
+			p.label.setText(text);
+			// p.lastText = text;
+
+			p.table.invalidate();
+			p.table.pack();
+			p.table.validate();
+
+			p.btnY = topY - p.table.getHeight();
 		}
 		p.table.setPosition(p.btnX, p.btnY);
 	}
